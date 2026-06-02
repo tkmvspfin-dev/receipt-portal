@@ -1,1 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TKM VSP | Premium Receipt Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --accent-color: #10b981;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --input-bg: rgba(15, 23, 42, 0.7);
+    }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+
+    .dashboard-container {
+      background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+      width: 100%; max-width: 900px; border-radius: 24px; border: 1px solid var(--border-color);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 40px; position: relative;
+    }
+
+    .header-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+    .title-area h1 { font-size: 26px; font-weight: 800; background: linear-gradient(to right, #34d399, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .title-area p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .full-width { grid-column: span 2; }
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
+
+    input, select {
+      width: 100%; background: var(--input-bg); border: 1px solid var(--border-color);
+      padding: 14px 16px 14px 48px; border-radius: 12px; color: var(--text-main); font-size: 14px; outline: none;
+    }
+    input:focus, select:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15); }
+    input[readonly] { background: rgba(255, 255, 255, 0.04); color: #cbd5e1; cursor: not-allowed; border-style: dashed; }
+
+    .btn-submit {
+      width: 100%; background: linear-gradient(to right, #10b981, #059669); color: white;
+      border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700;
+      cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 25px;
+    }
+
+    .status-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a;
+      border-radius: 24px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      gap: 20px; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 10;
+    }
+    .status-overlay.active { opacity: 1; pointer-events: auto; }
+    .success-icon { width: 70px; height: 70px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; color: var(--accent-color); }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <div class="status-overlay" id="statusOverlay">
+      <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+      <h2 style="font-weight: 800; font-size: 24px; color: #34d399;">Transaction Logged Safely!</h2>
+      <p style="color: var(--text-muted); font-size: 14px;" id="successMsg">Receipt entry submitted to ledger tables database successfully.</p>
+      <button type="button" onclick="resetPortal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: white; padding: 10px 24px; border-radius: 8px; font-weight:700; cursor:pointer;">Log New Receipt</button>
+    </div>
+
+    <div class="header-wrapper">
+      <div class="title-area">
+        <h1>Cloud Receipt Workspace Portal</h1>
+        <p>Premium server-hosted workspace connecting directly to Google Spreadsheet API.</p>
+      </div>
+    </div>
+
+    <form id="receiptForm" onsubmit="handleFormSubmit(event)">
+      <div class="form-grid">
+        <div class="input-group full-width">
+          <label>Select Member Name</label>
+          <div class="input-wrapper">
+            <select id="memberName" onchange="autoPopulateDetails()" required>
+              <option value="" disabled selected>Connecting to Google Cloud names index...</option>
+            </select>
+            <i class="fa-solid fa-user"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>ITS Number</label>
+          <div class="input-wrapper">
+            <input type="text" id="itsNumber" readonly placeholder="Waiting for selection...">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Date of Payment</label>
+          <div class="input-wrapper">
+            <input type="date" id="paymentDate" required>
+            <i class="fa-solid fa-calendar-day"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Amount Received</label>
+          <div class="input-wrapper">
+            <input type="number" id="amountReceived" step="0.01" required placeholder="0.00">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Mode of Payment</label>
+          <div class="input-wrapper">
+            <select id="paymentMode" required>
+              <option value="" disabled selected>Select channel...</option>
+              <option value="UPI / Instant Transfer">UPI / Instant Transfer</option>
+              <option value="Bank Remittance">Bank Remittance</option>
+              <option value="Cash Settlement">Cash Settlement</option>
+            </select>
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+        </div>
+
+        <div class="input-group full-width">
+          <label>Member Email Address</label>
+          <div class="input-wrapper">
+            <input type="email" id="emailId" readonly placeholder="Waiting for selection...">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Period Coverage (Quarter)</label>
+          <div class="input-wrapper">
+            <select id="quarter" required>
+              <option value="Quarter 1">Quarter 1</option>
+              <option value="Quarter 2">Quarter 2</option>
+              <option value="Quarter 3">Quarter 3</option>
+            </select>
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Accounting Year</label>
+          <div class="input-wrapper">
+            <select id="year" required></select>
+            <i class="fa-solid fa-business-time"></i>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn"><i class="fa-solid fa-paper-plane"></i> Commit Entry to Google Sheets</button>
+    </form>
+  </div>
+
+  <script>
+    // Embedded live authorization endpoint route link
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwGg2lYpT8CzVuLMmNx3IrB5_2Jap7VfygDwZOA6A4EPXpNDIx4mwEKIgaHoPInFX0CHw/exec";
+
+    let globalDirectory = {};
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('paymentDate').valueAsDate = new Date();
+      setupYearDropdown();
+      
+      // Fetch data directories cleanly using standard HTTP GET requests
+      fetch(GOOGLE_API_URL)
+        .then(res => res.json())
+        .then(directory => {
+          globalDirectory = directory;
+          const nameDropdown = document.getElementById('memberName');
+          nameDropdown.innerHTML = '<option value="" disabled selected>Choose a member name...</option>';
+          
+          Object.keys(directory).sort().forEach(name => {
+            let opt = document.createElement('option');
+            opt.value = name; opt.innerHTML = name;
+            nameDropdown.appendChild(opt);
+          });
+        })
+        .catch(err => alert("Connection error loading name registers: " + err));
+    });
+
+    function autoPopulateDetails() {
+      const selectedName = document.getElementById('memberName').value;
+      const profile = globalDirectory[selectedName];
+      if (profile) {
+        document.getElementById('itsNumber').value = profile.its || "N/A";
+        document.getElementById('emailId').value = profile.email || "N/A";
+      }
+    }
+
+    function setupYearDropdown() {
+      const yearSelect = document.getElementById('year');
+      const currentYear = new Date().getFullYear();
+      for (let y = 2000; y <= 2099; y++) {
+        let opt = document.createElement('option'); opt.value = y; opt.innerHTML = y;
+        if(y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Writing entry to spreadsheet ledger arrays...';
+      
+      const payload = {
+        memberName: document.getElementById('memberName').value,
+        paymentDate: document.getElementById('paymentDate').value,
+        amountReceived: document.getElementById('amountReceived').value,
+        paymentMode: document.getElementById('paymentMode').value,
+        emailId: document.getElementById('emailId').value,
+        quarter: document.getElementById('quarter').value,
+        year: document.getElementById('year').value
+      };
+
+      // Encodes form objects to query sequences to seamlessly clear CORS security gates
+      fetch(GOOGLE_API_URL + "?" + new URLSearchParams(payload), {
+        method: "POST",
+        mode: "no-cors"
+      })
+      .then(() => {
+        // Triggers glowing premium submission overlay immediately on completion screen
+        document.getElementById('statusOverlay').classList.add('active');
+      })
+      .catch(err => {
+        alert("Transmission fault verified: " + err);
+        resetPortal();
+      });
+    }
+
+    function resetPortal() {
+      document.getElementById('receiptForm').reset();
+      document.getElementById('paymentDate').valueAsDate = new Date();
+      document.getElementById('statusOverlay').classList.remove('active');
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Commit Entry to Google Sheets';
+    }
+  </script>
+</body>
+</html>
