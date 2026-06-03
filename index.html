@@ -167,12 +167,12 @@
   </div>
 
   <script>
-    // ⚠️ REPLACE THIS STRING VALUE WITH YOUR NEW GOOGLE WEB APP EXEC LINK FROM STEP 1
-    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwGg2lYpT8CzVuLMmNx3IrB5_2Jap7VfygDwZOA6A4EPXpNDIx4mwEKIgaHoPInFX0CHw/exec";
+    // Configured live URL deployment path endpoint link
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx-jgt0BRYdhjE5P0LxYvkBHuPyXXvjeYDFktMcMHfQ_ddJWgX1DEZQ7P9HlOdGlHgWbQ/exec";
 
     let globalDirectory = {};
 
-    // Handles processing clean text responses from your script data feeds
+    // Dynamic JSONP functional callbacks mapping registers natively
     window.handleNamesData = function(directory) {
       globalDirectory = directory;
       const nameDropdown = document.getElementById('memberName');
@@ -195,7 +195,7 @@
       document.getElementById('paymentDate').valueAsDate = new Date();
       setupYearDropdown();
       
-      // Injecting script pipelines directly to cleanly bypass cross-origin browser rules
+      // Inject script execution pipelines cleanly bypasses local origin security barriers
       const logoScript = document.createElement('script');
       logoScript.src = GOOGLE_API_URL + "?action=logo&callback=handleLogoData";
       document.body.appendChild(logoScript);
@@ -230,6 +230,7 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Writing entry to spreadsheet ledger arrays...';
       
+      // Standardize payload key values to pass variables cleanly into doPost parameters
       var urlEncodedData = new URLSearchParams();
       urlEncodedData.append("memberName", document.getElementById('memberName').value);
       urlEncodedData.append("paymentDate", document.getElementById('paymentDate').value);
@@ -239,6 +240,7 @@
       urlEncodedData.append("quarter", document.getElementById('quarter').value);
       urlEncodedData.append("year", document.getElementById('year').value);
 
+      // Fires via POST using an optimized url-encoded structural body payload
       fetch(GOOGLE_API_URL, {
         method: "POST",
         mode: "no-cors",
@@ -246,6 +248,7 @@
         body: urlEncodedData.toString()
       })
       .then(() => {
+        // Activates premium visual checkmark completion popup panel
         document.getElementById('statusOverlay').classList.add('active');
       })
       .catch(err => {
