@@ -167,40 +167,43 @@
   </div>
 
   <script>
-    // Embedded API configuration router URL
     const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwGg2lYpT8CzVuLMmNx3IrB5_2Jap7VfygDwZOA6A4EPXpNDIx4mwEKIgaHoPInFX0CHw/exec";
 
     let globalDirectory = {};
+
+    // JSONP Engine Callback Handler for Names Data Injection
+    function handleNamesData(directory) {
+      globalDirectory = directory;
+      const nameDropdown = document.getElementById('memberName');
+      nameDropdown.innerHTML = '<option value="" disabled selected>Choose a member name...</option>';
+      
+      Object.keys(directory).sort().forEach(name => {
+        let opt = document.createElement('option');
+        opt.value = name; opt.innerHTML = name;
+        nameDropdown.appendChild(opt);
+      });
+    }
+
+    // JSONP Engine Callback Handler for Logo Stream Injection
+    function handleLogoData(data) {
+      if (data && data.logo) {
+        document.getElementById('dashboardLogo').src = data.logo;
+      }
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('paymentDate').valueAsDate = new Date();
       setupYearDropdown();
       
-      // Fixed: Stripped broken modal-only call and fetched base64 image over HTTP pipeline safely
-      fetch(GOOGLE_API_URL + "?action=logo")
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.logo) {
-            document.getElementById('dashboardLogo').src = data.logo;
-          }
-        })
-        .catch(err => console.log("Logo load bypass"));
+      // 🚀 JSONP Request 1: Load Logo via script tags to clear security gates
+      const logoScript = document.createElement('script');
+      logoScript.src = GOOGLE_API_URL + "?action=logo&callback=handleLogoData";
+      document.body.appendChild(logoScript);
 
-      // Fetch directories cleanly using standard HTTP GET requests
-      fetch(GOOGLE_API_URL)
-        .then(res => res.json())
-        .then(directory => {
-          globalDirectory = directory;
-          const nameDropdown = document.getElementById('memberName');
-          nameDropdown.innerHTML = '<option value="" disabled selected>Choose a member name...</option>';
-          
-          Object.keys(directory).sort().forEach(name => {
-            let opt = document.createElement('option');
-            opt.value = name; opt.innerHTML = name;
-            nameDropdown.appendChild(opt);
-          });
-        })
-        .catch(err => alert("Connection error loading name registers: " + err));
+      // 🚀 JSONP Request 2: Load Names via script tags to clear security gates
+      const dataScript = document.createElement('script');
+      dataScript.src = GOOGLE_API_URL + "?callback=handleNamesData";
+      document.body.appendChild(dataScript);
     });
 
     function autoPopulateDetails() {
