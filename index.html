@@ -167,12 +167,13 @@
   </div>
 
   <script>
+    // ⚠️ REPLACE THIS STRING VALUE WITH YOUR NEW GOOGLE WEB APP EXEC LINK FROM STEP 1
     const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwGg2lYpT8CzVuLMmNx3IrB5_2Jap7VfygDwZOA6A4EPXpNDIx4mwEKIgaHoPInFX0CHw/exec";
 
     let globalDirectory = {};
 
-    // JSONP Engine Callback Handler for Names Data Injection
-    function handleNamesData(directory) {
+    // Handles processing clean text responses from your script data feeds
+    window.handleNamesData = function(directory) {
       globalDirectory = directory;
       const nameDropdown = document.getElementById('memberName');
       nameDropdown.innerHTML = '<option value="" disabled selected>Choose a member name...</option>';
@@ -182,25 +183,23 @@
         opt.value = name; opt.innerHTML = name;
         nameDropdown.appendChild(opt);
       });
-    }
+    };
 
-    // JSONP Engine Callback Handler for Logo Stream Injection
-    function handleLogoData(data) {
+    window.handleLogoData = function(data) {
       if (data && data.logo) {
         document.getElementById('dashboardLogo').src = data.logo;
       }
-    }
+    };
 
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('paymentDate').valueAsDate = new Date();
       setupYearDropdown();
       
-      // 🚀 JSONP Request 1: Load Logo via script tags to clear security gates
+      // Injecting script pipelines directly to cleanly bypass cross-origin browser rules
       const logoScript = document.createElement('script');
       logoScript.src = GOOGLE_API_URL + "?action=logo&callback=handleLogoData";
       document.body.appendChild(logoScript);
 
-      // 🚀 JSONP Request 2: Load Names via script tags to clear security gates
       const dataScript = document.createElement('script');
       dataScript.src = GOOGLE_API_URL + "?callback=handleNamesData";
       document.body.appendChild(dataScript);
