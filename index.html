@@ -1,5 +1,175 @@
-<script>
-    // Make sure your live URL link is pasted here inside the quotes
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TKM VSP | Premium Receipt Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --accent-color: #10b981;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --input-bg: rgba(15, 23, 42, 0.7);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+
+    .dashboard-container {
+      background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+      width: 100%; max-width: 900px; border-radius: 24px; border: 1px solid var(--border-color);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 40px; position: relative;
+    }
+
+    .header-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+    
+    .brand-identity-block { display: flex; align-items: center; gap: 15px; }
+    .logo-container { width: 55px; height: 55px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); display: flex; justify-content: center; align-items: center; overflow: hidden; }
+    .brand-logo-img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+    
+    .title-area h1 { font-size: 26px; font-weight: 800; background: linear-gradient(to right, #34d399, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .title-area p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .full-width { grid-column: span 2; }
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
+
+    input, select {
+      width: 100%; background: var(--input-bg); border: 1px solid var(--border-color);
+      padding: 14px 16px 14px 48px; border-radius: 12px; color: var(--text-main); font-size: 14px; outline: none;
+    }
+    input:focus, select:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15); }
+    input[readonly] { background: rgba(255, 255, 255, 0.04); color: #cbd5e1; cursor: not-allowed; border-style: dashed; }
+
+    .btn-submit {
+      width: 100%; background: linear-gradient(to right, #10b981, #059669); color: white;
+      border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700;
+      cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 25px;
+    }
+
+    .status-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a;
+      border-radius: 24px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      gap: 20px; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 10;
+    }
+    .status-overlay.active { opacity: 1; pointer-events: auto; }
+    .success-icon { width: 70px; height: 70px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; color: var(--accent-color); }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <div class="status-overlay" id="statusOverlay">
+      <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+      <h2 style="font-weight: 800; font-size: 24px; color: #34d399;">Transaction Logged Safely!</h2>
+      <p style="color: var(--text-muted); font-size: 14px;" id="successMsg">Receipt entry submitted to ledger tables database successfully.</p>
+      <button type="button" onclick="resetPortal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: white; padding: 10px 24px; border-radius: 8px; font-weight:700; cursor:pointer;">Log New Receipt</button>
+    </div>
+
+    <div class="header-wrapper">
+      <div class="brand-identity-block">
+        <div class="logo-container">
+          <img id="dashboardLogo" class="brand-logo-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'/></svg>" alt="Logo">
+        </div>
+        <div class="title-area">
+          <h1>Cloud Fees Receipt Workspace Portal</h1>
+          <p>Premium server-hosted workspace connecting directly to Google Spreadsheet API.</p>
+        </div>
+      </div>
+    </div>
+
+    <form id="receiptForm" onsubmit="handleFormSubmit(event)">
+      <div class="form-grid">
+        <div class="input-group full-width">
+          <label>Select Member Name</label>
+          <div class="input-wrapper">
+            <select id="memberName" onchange="autoPopulateDetails()" required>
+              <option value="" disabled selected>Connecting to Google Cloud names index...</option>
+            </select>
+            <i class="fa-solid fa-user"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>ITS Number</label>
+          <div class="input-wrapper">
+            <input type="text" id="itsNumber" readonly placeholder="Waiting for selection...">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Date of Payment</label>
+          <div class="input-wrapper">
+            <input type="date" id="paymentDate" required>
+            <i class="fa-solid fa-calendar-day"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Amount Received</label>
+          <div class="input-wrapper">
+            <input type="number" id="amountReceived" step="0.01" required placeholder="0.00">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Mode of Payment</label>
+          <div class="input-wrapper">
+            <select id="paymentMode" required>
+              <option value="" disabled selected>Select channel...</option>
+              <option value="UPI / Instant Transfer">UPI / Instant Transfer</option>
+              <option value="Bank Remittance">Bank Remittance</option>
+              <option value="Cash Settlement">Cash Settlement</option>
+            </select>
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+        </div>
+
+        <div class="input-group full-width">
+          <label>Member Email Address</label>
+          <div class="input-wrapper">
+            <input type="email" id="emailId" readonly placeholder="Waiting for selection...">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Period Coverage (Quarter)</label>
+          <div class="input-wrapper">
+            <select id="quarter" required>
+              <option value="Quarter 1">Quarter 1</option>
+              <option value="Quarter 2">Quarter 2</option>
+              <option value="Quarter 3">Quarter 3</option>
+            </select>
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Accounting Year</label>
+          <div class="input-wrapper">
+            <select id="year" required></select>
+            <i class="fa-solid fa-business-time"></i>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn"><i class="fa-solid fa-paper-plane"></i> Commit Entry to Google Sheets</button>
+    </form>
+  </div>
+
+  <script>
+    // Embedded live authorization endpoint route link
     const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwGg2lYpT8CzVuLMmNx3IrB5_2Jap7VfygDwZOA6A4EPXpNDIx4mwEKIgaHoPInFX0CHw/exec";
 
     let globalDirectory = {};
@@ -8,6 +178,16 @@
       document.getElementById('paymentDate').valueAsDate = new Date();
       setupYearDropdown();
       
+      // Load Base64 Image string directly from script engine
+      google.script.run
+        .withSuccessHandler(function(base64DataUrl) {
+          if (base64DataUrl) {
+            document.getElementById('dashboardLogo').src = base64DataUrl;
+          }
+        })
+        .getLogoBase64();
+
+      // Fetch directories cleanly using standard HTTP GET requests
       fetch(GOOGLE_API_URL)
         .then(res => res.json())
         .then(directory => {
@@ -21,7 +201,7 @@
             nameDropdown.appendChild(opt);
           });
         })
-        .catch(err => alert("Connection error loading names directory: " + err));
+        .catch(err => alert("Connection error loading name registers: " + err));
     });
 
     function autoPopulateDetails() {
@@ -47,7 +227,7 @@
       event.preventDefault();
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting to Google Ledger...';
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Writing entry to spreadsheet ledger arrays...';
       
       // Package details into standard URL parameters format string
       var urlEncodedData = new URLSearchParams();
@@ -59,19 +239,19 @@
       urlEncodedData.append("quarter", document.getElementById('quarter').value);
       urlEncodedData.append("year", document.getElementById('year').value);
 
-      // Transmit via standard application/x-www-form-urlencoded pattern
+      // Transmit via standard application/x-www-form-urlencoded pattern to clear CORS firewalls
       fetch(GOOGLE_API_URL, {
         method: "POST",
-        mode: "no-cors", 
+        mode: "no-cors",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: urlEncodedData.toString()
       })
       .then(() => {
-        // Pop the success overlay checkmark right away
+        // Triggers success screens overlay immediately
         document.getElementById('statusOverlay').classList.add('active');
       })
       .catch(err => {
-        alert("Submission failure: " + err);
+        alert("Transmission fault verified: " + err);
         resetPortal();
       });
     }
@@ -84,3 +264,5 @@
       document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Commit Entry to Google Sheets';
     }
   </script>
+</body>
+</html>
